@@ -3,7 +3,7 @@
 Language: Cpp
 # BasedOnStyle: LLVM
 AccessModifierOffset: -4 # -2
-Standard: Cpp11
+Standard: c++17
 TabWidth: 4
 IndentWidth: 4
 UseTab: Never
@@ -15,7 +15,7 @@ ColumnLimit: 80
 BraceWrapping:
   AfterClass: false
   AfterCaseLabel: false
-  AfterControlStatement: false
+  AfterControlStatement: Never
   AfterEnum: false
   AfterFunction: false
   AfterNamespace: false
@@ -34,22 +34,22 @@ BraceWrapping:
   SplitEmptyNamespace: false
 
 # Align
-AlignAfterOpenBracket: true
+AlignAfterOpenBracket: Align
 # - 连续赋值语句的对齐
-AlignConsecutiveAssignments: false
+AlignConsecutiveAssignments: None
 # - 连续声明的对齐 可能导致空格间距过大
-AlignConsecutiveDeclarations: false
+AlignConsecutiveDeclarations: None
 AlignEscapedNewlines: Right
-AlignOperands: true
+AlignOperands: Align
 AlignTrailingComments: true
 # - 但是会导致 A a = {2, {3, 4}};换行
 AlignArrayOfStructures: Right
 
 # 允许函数声明的所有参数在放在下一行
 AllowAllParametersOfDeclarationOnNextLine: false
-AllowShortBlocksOnASingleLine: true
+AllowShortBlocksOnASingleLine: Always
 AllowShortCaseLabelsOnASingleLine: true
-AllowShortIfStatementsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
 # 允许短的函数放在同一行: None, InlineOnly(定义在类中), Empty(空函数), Inline(定义在类中，空函数), All
 AllowShortFunctionsOnASingleLine: Empty
@@ -59,7 +59,7 @@ AlwaysBreakAfterReturnType: None
 # 多行string字面量前换行
 AlwaysBreakBeforeMultilineStrings: false
 # 在template声明后换行
-AlwaysBreakTemplateDeclarations: true # false
+AlwaysBreakTemplateDeclarations: Yes # false
 # false表示函数实参要么都在同一行，要么都各自一行
 BinPackArguments: true
 # false表示所有形参要么都在同一行，要么都各自一行
@@ -145,7 +145,7 @@ RawStringFormats:
 # - 允许重新排版注释
 ReflowComments: true
 # - 允许排序#include
-SortIncludes: true
+SortIncludes: CaseInsensitive
 SortUsingDeclarations: true
 
 # add space
@@ -160,7 +160,7 @@ SpaceBeforeParens: ControlStatements
 # 尾随注释前添加的空格(只适用于//)
 SpacesBeforeTrailingComments: 1
 # 尖括号的<后和>前添加空格
-SpacesInAngles: false
+SpacesInAngles: Never
 # 容器(ObjC和JavaScript的数组和字典等)字面量中添加空格
 SpacesInContainerLiterals: true
 SpacesInCStyleCastParentheses: false
