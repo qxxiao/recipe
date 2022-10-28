@@ -3,10 +3,10 @@
 class Singleton {
 public:
     // 禁止拷贝和赋值
-    Singleton(const Singleton&) = delete;
-    Singleton& operator=(const Singleton&) = delete;
+    Singleton(const Singleton &) = delete;
+    Singleton &operator=(const Singleton &) = delete;
 
-    static Singleton& GetInstance();
+    static Singleton &GetInstance();
 
 private:
     Singleton();

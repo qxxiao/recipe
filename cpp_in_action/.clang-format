@@ -9,7 +9,7 @@ IndentWidth: 4
 UseTab: Never
 UseCRLF: false
 # 每行字符的限制，0表示没有限制
-ColumnLimit: 80
+ColumnLimit: 120
 
 # 大括号换行，只有当BreakBeforeBraces设置为Custom时才有效
 BraceWrapping:
@@ -136,7 +136,7 @@ ObjCBlockIndentWidth: 4
 ObjCSpaceAfterProperty: false
 ObjCSpaceBeforeProtocolList: true
 # - 指针和引用的对齐
-PointerAlignment: Left
+PointerAlignment: Right
 # 原始字符串格式, R"pb()"
 RawStringFormats:
   - Delimiters: [pb]
