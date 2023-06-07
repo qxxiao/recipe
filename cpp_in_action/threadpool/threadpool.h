@@ -30,18 +30,17 @@ public:
         NORMAL = 2,
     };
 
-    using ThreadPtr = std::shared_ptr<std::thread>;
     using ThreadId = std::atomic<int>;
     using ThreadStateAtomic = std::atomic<ThreadState>;
     using ThreadTypeAtomic = std::atomic<ThreadType>;
 
     struct ThreadWrapper {
-        ThreadPtr ptr;
+        std::thread t;
         ThreadId id;
         ThreadStateAtomic state;
         ThreadTypeAtomic type;
 
-        ThreadWrapper(ThreadPtr ptr = nullptr) : ptr(ptr) {}
+        ThreadWrapper() {}
     };
 
     //* coreThreads: 核心线程数(大于0, 否则 coreNums)

@@ -98,20 +98,13 @@ void ThreadPool::createThread(std::function<void()> ptask) {
         }
     };
     // 线程实例化
-    pthreadWrapper->ptr = std::make_shared<std::thread>(std::move(func));
+    pthreadWrapper->t = std::thread(std::move(func));
     {
         // std::lock_guard<std::mutex> lk(workers_mutex); // ok with no deleteThread
         workers.emplace_back(std::move(pthreadWrapper));
     }
     this->num_threads++;
 }
-
-// void ThreadPool::deleteThread(std::shared_ptr<ThreadWrapper> pWrapper) {
-//     {
-//         std::lock_guard<std::mutex> lk(workers_mutex);
-//         this->workers.remove(pWrapper);
-//     }
-// }
 
 // not thread safe(call in main thread)
 void ThreadPool::innerShutDown(bool now) {
@@ -126,8 +119,8 @@ void ThreadPool::innerShutDown(bool now) {
     // join all threads
     {
         for (auto &worker : workers) {
-            if (worker->ptr->joinable())
-                worker->ptr->join();
+            if (worker->t.joinable())
+                worker->t.join();
         }
     }
 }
