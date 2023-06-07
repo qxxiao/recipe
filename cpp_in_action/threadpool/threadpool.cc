@@ -1,28 +1,21 @@
 #include "threadpool.h"
 
-ThreadPool::ThreadPool(size_t coreThreads, size_t maxThreads, size_t maxTasks,
-                       std::chrono::milliseconds timeout) {
+ThreadPool::ThreadPool(size_t coreThreads, size_t maxThreads, size_t maxTasks, std::chrono::milliseconds timeout) {
     unsigned int coreNums = std::thread::hardware_concurrency();
-    // not up to 16 and 1.5*coreNums
-    coreThreads = std::max(1ul, coreThreads);
-    this->coreThreads =
-        coreNums == 0
-            ? std::min(coreThreads, 16ul)
-            : std::min(coreThreads, static_cast<size_t>(2 * coreNums));
-    this->maxThreads = maxThreads <= coreThreads
-                           ? this->coreThreads
-                           : std::min(maxThreads, 4 * this->coreThreads);
-    this->maxTasks = maxTasks <= 0 ? 5 * this->maxThreads : maxTasks;
+
+    this->coreThreads = coreThreads <= 0 ? coreNums : coreThreads;
+    this->maxThreads = (maxThreads < this->coreThreads) ? this->coreThreads : maxThreads;
+
+    this->maxTasks = maxTasks;
     this->timeout = timeout;
 
     this->num_threads = 0;
     this->num_idle_threads = 0;
     this->threadIDInit = 0;
-    this->num_remainedTasks = 0; // tasks size
+    this->num_remainedTasks = 0;
     this->num_finishedTasks = 0;
     this->is_shutdown = false;
     this->is_shutdownDelay = false;
-// log
 #ifdef DEBUG
     std::cout << "hardware_concurrency: " << coreNums << std::endl
               << "coreThreads: " << this->coreThreads << std::endl
@@ -42,18 +35,16 @@ void ThreadPool::createThread(std::function<void()> ptask) {
     auto pthreadWrapper = std::make_shared<ThreadWrapper>();
     pthreadWrapper->id = getNextThreadId();
     pthreadWrapper->state = ThreadState::IDLE;
-    pthreadWrapper->type = this->num_threads < this->coreThreads
-                               ? ThreadType::CORE
-                               : ThreadType::NORMAL;
+    // !! ok (only main thread can call createThread)
+    pthreadWrapper->type = this->num_threads < this->coreThreads ? ThreadType::CORE : ThreadType::NORMAL;
     std::weak_ptr<ThreadWrapper> wpthreadWrapper(pthreadWrapper);
     auto func = [this, wpthreadWrapper, ptask] {
         // get the shared_ptr pwrapper
         auto pwrapper = wpthreadWrapper.lock();
         if (!pwrapper) {
-            // log error
             return;
         }
-        // if starting a thread with a init task
+        // starting a thread with a init task
         if (ptask) {
             pwrapper->state = ThreadState::RUNNING;
             ptask();
@@ -69,40 +60,33 @@ void ThreadPool::createThread(std::function<void()> ptask) {
                 bool notTimeout = true;
                 // for core threads
                 if (pwrapper->type == ThreadType::CORE) {
-                    this->cond.wait(lk, [this] {
-                        return this->is_shutdown || this->is_shutdownDelay
-                               || !this->tasks.empty();
-                    });
+                    this->cond.wait(
+                        lk, [this] { return this->is_shutdown || this->is_shutdownDelay || !this->tasks.empty(); });
                 }
                 // for normal threads
                 else {
                     notTimeout = this->cond.wait_for(lk, this->timeout, [this] {
-                        return this->is_shutdown || this->is_shutdownDelay
-                               || !this->tasks.empty();
+                        return this->is_shutdown || this->is_shutdownDelay || !this->tasks.empty();
                     });
                 }
                 this->num_idle_threads--;
-                // for NORMAL Thread: timeout 并且条件不满足
+                // for NORMAL Thread: timeout and predication is false
                 if (!notTimeout) {
                     pwrapper->state = ThreadState::STOP;
                     this->num_threads--;
                     break; // exit thread
                 }
                 // 响应线程池退出
-                if (this->is_shutdown
-                    || (this->is_shutdownDelay && this->tasks.empty())) {
+                if (this->is_shutdown || (this->is_shutdownDelay && this->tasks.empty())) {
                     pwrapper->state = ThreadState::STOP;
                     this->num_threads--;
                     break;
                 }
                 task = std::move(this->tasks.front());
-                // log
 #ifdef DEBUG
-                std::cout << "num_thread: " << this->num_threads
-                          << " remained tasks: " << this->num_remainedTasks
+                std::cout << "num_thread: " << this->num_threads << " remained tasks: " << this->num_remainedTasks
                           << std::endl;
-                std::cout << "thread " << pwrapper->id << " get a queue task"
-                          << std::endl;
+                std::cout << "thread " << pwrapper->id << " get a queue task" << std::endl;
 #endif
                 this->tasks.pop();
                 this->num_remainedTasks--;
@@ -116,7 +100,7 @@ void ThreadPool::createThread(std::function<void()> ptask) {
     // 线程实例化
     pthreadWrapper->ptr = std::make_shared<std::thread>(std::move(func));
     {
-        // std::lock_guard<std::mutex> lk(workers_mutex);
+        // std::lock_guard<std::mutex> lk(workers_mutex); // ok with no deleteThread
         workers.emplace_back(std::move(pthreadWrapper));
     }
     this->num_threads++;
@@ -129,6 +113,7 @@ void ThreadPool::createThread(std::function<void()> ptask) {
 //     }
 // }
 
+// not thread safe(call in main thread)
 void ThreadPool::innerShutDown(bool now) {
     if (is_shutdown || is_shutdownDelay)
         return;
@@ -140,8 +125,7 @@ void ThreadPool::innerShutDown(bool now) {
     cond.notify_all();
     // join all threads
     {
-        // std::lock_guard<std::mutex> lk(workers_mutex);
-        for (auto& worker : workers) {
+        for (auto &worker : workers) {
             if (worker->ptr->joinable())
                 worker->ptr->join();
         }

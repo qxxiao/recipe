@@ -8,7 +8,7 @@ class LRUCache {
         Node(int key, int value) : key(key), val(value), pre(nullptr), next(nullptr) {}
     };
     int cap;
-    std::unordered_map<int, Node*> hash;
+    std::unordered_map<int, Node *> hash;
     Node *head, *tail;
 
 public:
@@ -21,9 +21,9 @@ public:
     }
 
     ~LRUCache() {
-        Node* cur = head;
+        Node *cur = head;
         while (cur) {
-            Node* tmp = cur;
+            Node *tmp = cur;
             cur = cur->next;
             delete tmp;
         }
@@ -59,7 +59,7 @@ public:
 
 private:
     // 访问过的节点移动到头部
-    void moveToHead(Node* node) {
+    void moveToHead(Node *node) {
         node->pre->next = node->next;
         node->next->pre = node->pre;
         node->next = head->next;
